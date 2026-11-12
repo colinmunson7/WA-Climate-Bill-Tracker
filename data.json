@@ -1,0 +1,9 @@
+{"sample": true, "last_run": "2026-11-12",
+ "bills": {
+  "SAMPLE 1": {"id":"SAMPLE 1","title":"Concerning electricity demand from large data centers","desc":"Placeholder bill for previewing the layout.","status":"Referred to Environment, Energy & Technology","date":"2026-11-12","topics":["Data centers","Clean energy"],"summary":"Sample: would require utilities to plan for large new data center loads and report on clean energy sourcing.","url":"https://app.leg.wa.gov/"},
+  "SAMPLE 2": {"id":"SAMPLE 2","title":"Establishing a framework for autonomous vehicle testing","desc":"Placeholder bill.","status":"Substitute bill proposed by committee","date":"2026-11-11","topics":["Autonomous vehicles"],"summary":"Sample edit: the substitute adds reporting duties for testing companies and narrows local preemption.","url":"https://app.leg.wa.gov/"},
+  "SAMPLE 3": {"id":"SAMPLE 3","title":"Updating wastewater treatment funding","desc":"Placeholder bill.","status":"First reading, referred to committee","date":"2026-11-10","topics":["Water & wastewater","Utilities & infrastructure"],"summary":"Sample: would expand grant eligibility for wastewater plant upgrades.","url":"https://app.leg.wa.gov/"}},
+ "feed": [
+  {"date":"2026-11-12","id":"SAMPLE 1","kind":"new","status":"Referred to Environment, Energy & Technology","summary":"Sample: would require utilities to plan for large new data center loads and report on clean energy sourcing."},
+  {"date":"2026-11-11","id":"SAMPLE 2","kind":"edited","status":"Substitute bill proposed by committee","summary":"Sample edit: the substitute adds reporting duties for testing companies and narrows local preemption."},
+  {"date":"2026-11-10","id":"SAMPLE 3","kind":"new","status":"First reading, referred to committee","summary":"Sample: would expand grant eligibility for wastewater plant upgrades."}]}

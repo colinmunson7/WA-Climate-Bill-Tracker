@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WA Bill Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f4;--surface:#fff;--ink:#14262b;--muted:#586b71;--line:#d3dde1;--accent:#1f6f5c;--new:#2b5fa8;--edit:#a8650f}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1b1f;--surface:#16262b;--ink:#e6eef0;--muted:#97aab0;--line:#2a3d43;--accent:#5fc2a8;--new:#86aeea;--edit:#e3b45f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Atkinson Hyperlegible",system-ui,sans-serif}
+header{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+h1{font-size:1.25rem;margin:14px 0 2px}.meta{color:var(--muted);font-size:.9rem;margin:0 0 10px}
+.banner{background:var(--edit);color:#fff;padding:6px 16px;font-size:.9rem;text-align:center}
+nav,.chips{display:flex;gap:6px;flex-wrap:wrap;padding-bottom:10px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px}
+button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:700}
+button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main{padding:16px 0 60px}
+.card{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:6px;padding:12px 16px;margin-bottom:12px}
+.card.new{border-left-color:var(--new)}.card.edited{border-left-color:var(--edit)}
+.top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.top a{font-weight:700;color:var(--accent)}.badge{font-size:.85rem;font-weight:700}.new .badge{color:var(--new)}.edited .badge{color:var(--edit)}
+h3{font-size:1.02rem;margin:4px 0}.sum{margin:6px 0}.status,.tags{color:var(--muted);font-size:.9rem;margin:4px 0}
+.watch{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+textarea,input{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:6px 8px;margin-top:6px}
+.row{display:flex;gap:6px}.empty{color:var(--muted);padding:24px 0}
+</style></head><body>
+<div id="sample" class="banner" hidden>Sample data. Run tracker.py to replace it with real bills.</div>
+<header><div class="wrap"><h1>Washington climate bills</h1><p class="meta" id="meta"></p>
+<nav id="tabs"></nav><div class="chips" id="chips"></div></div></header>
+<main class="wrap" id="list"></main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let D={bills:{},feed:[]},tab='new',topic='All',W={};
+try{W=JSON.parse(localStorage.getItem('watch')||'{}')}catch(e){}
+const save=()=>{try{localStorage.setItem('watch',JSON.stringify(W))}catch(e){}};
+const TABS={new:"What's new",watch:'Watchlist',all:'All bills'};
+fetch('data.json').then(r=>r.json()).then(d=>{D=d;$('#sample').hidden=!d.sample;render()})
+ .catch(()=>$('#list').innerHTML='<p class="empty">Could not load data.json. Serve this folder with <code>python -m http.server</code> and open localhost:8000.</p>');
+function card(b,item){
+  const w=W[b.id],k=item?item.kind:'';
+  let h=`<article class="card ${k}"><div class="top"><a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.id)}</a>
+  ${item?`<span class="badge">${k==='new'?'New':'Edited'} ${esc(item.date)}</span>`:''}
+  <button data-w="${esc(b.id)}" aria-pressed="${!!w}">${w?'Watching':'Watch'}</button></div>
+  <h3>${esc(b.title)}</h3><p class="sum">${esc((item&&item.summary)||b.summary||b.desc)}</p>
+  <p class="status">${esc(item?item.status:b.status)} ${b.date?'('+esc(b.date)+')':''}</p>
+  <p class="tags">${esc((b.topics||[]).join(', '))}</p>`;
+  if(w) h+=`<div class="watch"><label>Notes for my work<textarea data-n="${esc(b.id)}" rows="2">${esc(w.note)}</textarea></label>
+  ${(w.links||[]).map(l=>`<div><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a></div>`).join('')}
+  <div class="row"><input data-l="${esc(b.id)}" placeholder="Related city policy: name, then link"><button data-add="${esc(b.id)}">Add link</button></div></div>`;
+  return h+'</article>';
+}
+function render(){
+  $('#meta').textContent='Updated '+(D.last_run||'never')+' · '+Object.keys(D.bills).length+' bills tracked';
+  $('#tabs').innerHTML=Object.entries(TABS).map(([k,v])=>`<button data-t="${k}" aria-pressed="${tab===k}">${v}</button>`).join('');
+  const topics=['All',...new Set(Object.values(D.bills).flatMap(b=>b.topics||[]))];
+  $('#chips').innerHTML=topics.map(t=>`<button data-c="${esc(t)}" aria-pressed="${topic===t}">${esc(t)}</button>`).join('');
+  const ok=b=>b&&(topic==='All'||(b.topics||[]).includes(topic));
+  let out=[];
+  if(tab==='new')out=D.feed.filter(i=>ok(D.bills[i.id])).map(i=>card(D.bills[i.id],i));
+  if(tab==='watch')out=Object.keys(W).map(id=>D.bills[id]).filter(ok).map(b=>card(b));
+  if(tab==='all')out=Object.values(D.bills).filter(ok).slice(0,300).map(b=>card(b));
+  $('#list').innerHTML=out.join('')||'<p class="empty">Nothing here yet. Star a bill with Watch to build your list.</p>';
+}
+document.addEventListener('click',e=>{
+  const t=e.target,g=a=>t.dataset[a];
+  if(g('t'))tab=g('t');else if(g('c'))topic=g('c');
+  else if(g('w')){W[g('w')]?delete W[g('w')]:W[g('w')]={note:'',links:[]};save()}
+  else if(g('add')){const i=document.querySelector(`[data-l="${CSS.escape(g('add'))}"]`),m=i.value.match(/^(.*?)[\s,]*(https?:\/\/\S+)$/);
+    if(!m)return alert('Enter a name, then a link starting with https://');W[g('add')].links.push({label:m[1]||m[2],url:m[2]});save()}
+  else return;render();
+});
+document.addEventListener('input',e=>{if(e.target.dataset.n){W[e.target.dataset.n].note=e.target.value;save()}});
+</script></body></html>
